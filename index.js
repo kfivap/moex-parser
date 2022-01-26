@@ -44,7 +44,7 @@ function derivativesMapper(rawDerivative) {
 }
 
 async function main() {
-    const daysArr = dataArrayGenerator(2)
+    const daysArr = dataArrayGenerator(365) //todo index by dates
     console.log(1)
     for (const day of daysArr) {
         console.log(2, day)
