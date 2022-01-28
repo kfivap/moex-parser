@@ -1,32 +1,105 @@
 import React, { useEffect, useState } from 'react';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import moment from 'moment'
+import SelectedIsinCard from './SelectedIsinCard';
+import { useSelector } from 'react-redux';
+import { useActions } from '../hooks/useActions';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 
 const Graphic = () => {
-    const [derivativeData, setDerivativeData] = useState([])
+    const { currentIsin } = useSelector(state => { return state.main })
+    const { setCurrentIsinDerivativeData } = useActions()
+
+
+    const [derivativeData, setDerivativeData] = useState()
     useEffect(() => {
         async function fetchData() {
-            const response = await fetch('http://localhost:5000/derivatives?isin=Si')
-            setDerivativeData(await response.json())
+            if (!currentIsin) return
+            const response = await fetch(`http://localhost:5000/derivatives?isin=${currentIsin?.isin}`)
+            const respJson = await response.json()
+            setDerivativeData(respJson)
+            setCurrentIsinDerivativeData({ fiz: respJson.fizDerivatives[respJson.fizDerivatives.length - 1], legal: respJson.nonFizDerivatives[respJson.nonFizDerivatives.length - 1] })
         }
         fetchData();
-    }, [])
+    }, [currentIsin])
     console.log({ derivativeData })
+    if (!derivativeData) {
+        return <h1>please set isin</h1>
+    }
+
+    const getLabels = () => {
+        return derivativeData.fizDerivatives.map(der => moment(der.date).format('DD-MM-YY'))
+    }
+    const getGraphicData = (izFiz, positionType) => {
+        return derivativeData[izFiz].map(der => der[positionType])
+    }
+
     return (
         <div>
-            {/* todo react charts */}
-            {derivativeData.map(der=>{
-                return <div>
-                    date: {der.moment}
-                    ticker: {der.isin}, 
-                    contract_type: {der.contract_type}, 
-                    <br/>
-                    long_position: {der.long_position}, 
-                    short_position: {der.short_position}, 
-                    <br/>
-                    <br/>
+            <SelectedIsinCard />
 
-                </div>
-            })}
+            <div className='chart-block'>
+                <Line options={{
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        // title: {
+                        // display: true,
+                        // text: 'Chart.js Line Chart',
+                        // },
+                    }
+                }}
+                    data={
+                        {
+                            labels: getLabels(),
+                            datasets: [
+                                {
+                                    label: 'Fiz Short',
+                                    data: getGraphicData('fizDerivatives', 'short_position'),
+                                    borderColor: '#de1212',
+                                },
+                                {
+                                    label: 'Fiz Long',
+                                    data: getGraphicData('fizDerivatives', 'long_position'),
+                                    borderColor: '#24c0e3',
+                                },
+                                {
+                                    label: 'Legal Short',
+                                    data: getGraphicData('nonFizDerivatives', 'short_position'),
+                                    borderColor: '#ff9500',
+                                },
+                                {
+                                    label: 'legal Long',
+                                    data: getGraphicData('nonFizDerivatives', 'long_position'),
+                                    borderColor: '#22ff00',
+                                    // backgroundColor: '22ff00',
+                                },
+                            ],
+                        }
+                    } />
+            </div>
         </div>
     );
 };

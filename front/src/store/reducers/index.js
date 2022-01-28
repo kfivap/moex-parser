@@ -4,7 +4,8 @@ import { combineReducers } from "redux";
 
 const initialState = {
     isinList: [],
-    currentIsin: null
+    currentIsin: null,
+    currentIsinDerivativeData: null
 }
 
 export const mainReducer = (state = initialState, action) => {
@@ -13,6 +14,8 @@ export const mainReducer = (state = initialState, action) => {
             return { ...state, isinList: action.payload }
         case 'setCurrentIsin':
             return { ...state, currentIsin: action.payload }
+        case 'setCurrentIsinDerivativeData':
+            return { ...state, currentIsinDerivativeData: action.payload }
         default:
             console.log('warning!!! default reducer')
             return state

@@ -6,3 +6,6 @@ export const setIsinList = (payload) => {
 export const setCurrentIsin = (payload) => {
     return {type: 'setCurrentIsin', payload}
 }
+export const setCurrentIsinDerivativeData = (payload) => {
+    return {type: 'setCurrentIsinDerivativeData', payload}
+}

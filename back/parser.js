@@ -11,7 +11,7 @@ const parseFloatOrReturnNull = (strNum) => parseFloat(strNum) || null
 
 function derivativesMapper(rawDerivative) {
     return {
-        moment: moment(rawDerivative['moment']).add(3, 'hours').toISOString(),
+        date: moment(rawDerivative['date']).add(3, 'hours').toISOString(),
         isin: rawDerivative.isin,
         name: rawDerivative.name,
         contract_type: rawDerivative.contract_type,
@@ -28,7 +28,7 @@ function derivativesMapper(rawDerivative) {
 }
 
 async function main() {
-    const daysArr = dataArrayGenerator(1) //todo index by dates
+    const daysArr = dataArrayGenerator(10)  
     console.log(1)
     for (const day of daysArr) {
         console.log(2, day)
@@ -36,8 +36,9 @@ async function main() {
         if (!data.length) continue
         const formated = data.map(derivativesMapper)
 
-        await DerivativeModel.create(formated)
+        await DerivativeModel.create(formated) //todo unique
     }
+    process.exit(0)
 }
 
 function dataArrayGenerator(range) {

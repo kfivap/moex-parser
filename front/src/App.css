@@ -40,4 +40,8 @@ body {
     font-size: 18px; /* Increased text to enable scrolling */
     padding: 0px 10px;
   }
+
+  .chart-block {
+    max-width: 1200px;
+  }
   

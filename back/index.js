@@ -9,15 +9,47 @@ mongoose.connect("mongodb://localhost:27017/moexdb", { useUnifiedTopology: true,
 app.use(cors())
 app.use(express.json())
 
+app.use((req, res, next) => {
+    console.log(req.originalUrl)
+    next()
+})
+
 app.get('/derivatives', async (req, res) => {
     const { isin } = req.query
     if (!isin) return res.sendStatus(400)
-    const derivatives = await DerivativeModel.find({ isin }).limit(100)
-    return res.json(derivatives)
+    const query = {
+        isin, contract_type: 'F'
+    }
+    const limit = 10
+    const [fizDerivatives, nonFizDerivatives] = await Promise.all([
+        DerivativeModel.find({ ...query, iz_fiz: true }).limit(limit).sort({ date: 1 }),
+        DerivativeModel.find({ ...query, iz_fiz: false }).limit(limit).sort({ date: 1 })
+    ])
+    return res.json({ fizDerivatives, nonFizDerivatives })
 })
 app.get('/isin', async (req, res) => {
-    const isiList = await DerivativeModel.distinct('isin')
-    return res.json(isiList)
+    const isinList = await DerivativeModel.aggregate([
+        {
+            $group: {
+                "_id": "$isin",
+                name: {
+                    $first: "$name"
+                }
+            }
+        }, {
+            $addFields: {
+                isin: "$_id"
+            }
+        }, {
+            $project: {
+                _id: 0
+            }
+        }, {
+            $sort: { "isin": 1 }
+        }
+    ])
+    console.log(isinList)
+    return res.json(isinList)
 })
 
 app.use((req, res) => {
