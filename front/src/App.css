@@ -45,3 +45,14 @@ body {
     max-width: 1200px;
   }
   
+  .isin-info-container {
+    display: flex;
+  }
+  
+  .isin-info-elem {
+    padding: 10px 20px;
+  }
+
+  .selected-isin-card {
+    margin-left: 20px;
+  }
