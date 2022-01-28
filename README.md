@@ -1,3 +1,8 @@
+# docker-compose build
+# docker-compose up
+# docker-compose down
+
+
 todo
 
 сделать аналитику, где большие расхождения физ и юр лица
