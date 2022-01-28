@@ -3,14 +3,18 @@ import { combineReducers } from "redux";
 
 
 const initialState = {
-    isin: []
+    isinList: [],
+    currentIsin: null
 }
 
 export const mainReducer = (state = initialState, action) => {
     switch (action.type) {
         case 'setIsinList':
-            return { ...state, isin: action.payload }
+            return { ...state, isinList: action.payload }
+        case 'setCurrentIsin':
+            return { ...state, currentIsin: action.payload }
         default:
+            console.log('warning!!! default reducer')
             return state
 
     }
