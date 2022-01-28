@@ -30,25 +30,45 @@ app.get('/derivatives', async (req, res) => {
 app.get('/isin', async (req, res) => {
     const isinList = await DerivativeModel.aggregate([
         {
-            $group: {
-                "_id": "$isin",
-                name: {
-                    $first: "$name"
-                }
+            $match: {
+                contract_type: 'F'
             }
-        }, {
-            $addFields: {
-                isin: "$_id"
-            }
-        }, {
-            $project: {
-                _id: 0
-            }
-        }, {
-            $sort: { "isin": 1 }
         }
+        , {
+            $sort: { date: -1 }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "isin": "$isin",
+                    "iz_fiz": "$iz_fiz"
+                },
+                "short_position": {
+                    '$first': '$short_position'
+                },
+                "long_position": {
+                    '$first': '$long_position'
+                },
+            }
+        },
+        {
+            "$group": {
+                "_id": "$_id.isin",
+                "data": {
+                    "$push": {
+                        "iz_fiz": "$_id.iz_fiz",
+                        "short_position": "$short_position",
+                        "long_position": "$long_position",
+                        "total": {
+                            '$sum': ['$long_position', '$short_position']
+                        }
+                    },
+                },
+                "count": { "$sum": "$docsCount" }
+            }
+        },
+        { "$sort": { "data.total": -1 } },
     ])
-    console.log(isinList)
     return res.json(isinList)
 })
 

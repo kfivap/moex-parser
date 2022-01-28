@@ -9,7 +9,7 @@ const IsinItem = ({ isin }) => {
         setCurrentIsin(this.isin)
     }
     return (
-        <div className={`isin ${currentIsin === isin.isin ? 'isin isin-selected' : 'isin isin-notSelected'}`} onClick={setCurrentIsinHandler.bind({ isin })}>{isin.isin}</div>
+        <div className={`isin ${currentIsin.isin === isin.isin ? 'isin isin-selected' : 'isin isin-notSelected'}`} onClick={setCurrentIsinHandler.bind({ isin })}>{isin.isin}</div>
     );
 };
 
