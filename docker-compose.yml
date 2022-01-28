@@ -1,0 +1,39 @@
+version: '3.0'
+
+services:
+
+  front:
+    container_name: front
+    build:
+      context: ./front
+    ports:
+      - 3000:3000
+    command: npm run start
+    depends_on:
+      - back
+    restart: always
+
+  back:
+    container_name: back
+    build:
+      context: ./back
+    ports:
+      - 5000:5000
+    environment: 
+      MONGO_URI: mongodb:27017
+    command: npm run dev
+    depends_on:
+      - mongodb
+    restart: always
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:5
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo:/data/db
+    restart: always
+
+volumes:
+  mongo:

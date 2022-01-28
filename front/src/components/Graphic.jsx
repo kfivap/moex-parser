@@ -42,7 +42,6 @@ const Graphic = () => {
         }
         fetchData();
     }, [currentIsin])
-    console.log({ derivativeData })
     if (!derivativeData) {
         return <h1>please set isin</h1>
     }

@@ -27,8 +27,8 @@ function derivativesMapper(rawDerivative) {
     }
 }
 
-async function main() {
-    const daysArr = dataArrayGenerator(10)  
+async function main(callback) {
+    const daysArr = dataArrayGenerator(10)
     console.log(1)
     for (const day of daysArr) {
         console.log(2, day)
@@ -38,7 +38,8 @@ async function main() {
 
         await DerivativeModel.create(formated) //todo unique
     }
-    process.exit(0)
+
+    if (callback) callback()
 }
 
 function dataArrayGenerator(range) {
@@ -73,4 +74,10 @@ async function getDataByDay(day) {
     })
 }
 
-main()
+if (require.main === module) {
+    console.log('script is main, exit after done')
+    main(() => { process.exit(0) });
+} else {
+    console.log('script is module, no exit')
+    main()
+}

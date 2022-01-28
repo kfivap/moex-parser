@@ -3,8 +3,8 @@ const cors = require('cors')
 const app = express()
 const mongoose = require("mongoose");
 const { DerivativeModel } = require('./models')
-
-mongoose.connect("mongodb://localhost:27017/moexdb", { useUnifiedTopology: true, useNewUrlParser: true });
+console.log(process.env.MONGO_URI)
+mongoose.connect(`mongodb://${process.env.MONGO_URI || 'localhost:27017'}/moexdb`, { useUnifiedTopology: true, useNewUrlParser: true });
 
 app.use(cors())
 app.use(express.json())
@@ -27,14 +27,22 @@ app.get('/derivatives', async (req, res) => {
     ])
     return res.json({ fizDerivatives, nonFizDerivatives })
 })
+
+app.get('/fetch-data', async (req, res) => {
+    const dataExist = await DerivativeModel.count()
+    if (dataExist) return res.json({ message: 'data already exist' })
+    require('./parser')
+    res.sendStatus(200)
+})
+
 app.get('/isin', async (req, res) => {
     const isinList = await DerivativeModel.aggregate([
         {
             $match: {
                 contract_type: 'F'
             }
-        }
-        , {
+        },
+        {
             $sort: { date: -1 }
         },
         {
@@ -75,7 +83,7 @@ app.get('/isin', async (req, res) => {
                         input: "$data.total_positions",
                         initialValue: { totalPositions: 0 },
                         in: {
-                            totalPositions: { $add : ["$$value.totalPositions", "$$this"] },
+                            totalPositions: { $add: ["$$value.totalPositions", "$$this"] },
                         }
                     }
                 }
@@ -95,4 +103,4 @@ app.use((req, res) => {
     res.sendStatus(404)
 })
 
-app.listen(5000, () => { console.log('http://localhost:5000') })
+app.listen(5000, async () => { console.log('http://localhost:5000') })

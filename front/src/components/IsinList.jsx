@@ -10,7 +10,6 @@ const IsinList = () => {
         async function fetchData() {
             const response = await fetch('http://localhost:5000/isin')
             const jsonData = await response.json()
-            console.log(jsonData)
             setIsinList(jsonData)
 
         }

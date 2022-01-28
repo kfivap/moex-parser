@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 const SelectedIsinCard = () => {
     const { currentIsin } = useSelector(state => { return state.main })
     const { currentIsinDerivativeData } = useSelector(state => { return state.main })
-    console.log(currentIsinDerivativeData)
     if (!currentIsin) return null
     return (
         <div className='selected-isin-card'>
