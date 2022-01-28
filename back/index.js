@@ -59,15 +59,34 @@ app.get('/isin', async (req, res) => {
                         "iz_fiz": "$_id.iz_fiz",
                         "short_position": "$short_position",
                         "long_position": "$long_position",
-                        "total": {
+                        "total_positions": {
                             '$sum': ['$long_position', '$short_position']
                         }
                     },
                 },
-                "count": { "$sum": "$docsCount" }
             }
         },
-        { "$sort": { "data.total": -1 } },
+        { "$sort": { "data.total_positions": -1 } },
+        {
+            $addFields: {
+                isin: "$_id",
+                meta: {
+                    "$reduce": {
+                        input: "$data.total_positions",
+                        initialValue: { totalPositions: 0 },
+                        in: {
+                            totalPositions: { $add : ["$$value.totalPositions", "$$this"] },
+                        }
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                data: 0
+            }
+        }
     ])
     return res.json(isinList)
 })
