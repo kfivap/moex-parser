@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 const mongoose = require("mongoose");
+const fetchData = require('./parser')
 const { DerivativeModel } = require('./models')
 console.log(process.env.MONGO_URI)
 mongoose.connect(`mongodb://${process.env.MONGO_URI || 'localhost:27017'}/moexdb`, { useUnifiedTopology: true, useNewUrlParser: true });
@@ -30,7 +31,7 @@ app.get('/derivatives', async (req, res) => {
 
 
 app.get('/isin', async (req, res) => {
-    require('./parser') //temporary
+    fetchData()
     const isinList = await DerivativeModel.aggregate([
         {
             $match: {

@@ -2,10 +2,7 @@
 const https = require('https')
 const csv = require('csv-parser')
 const moment = require('moment')
-const mongoose = require("mongoose");
 const { DerivativeModel } = require('./models');
-const { resolve } = require('path');
-mongoose.connect("mongodb://localhost:27017/moexdb", { useUnifiedTopology: true, useNewUrlParser: true });
 
 const CSV_DOCUMENT_DATE_FORMAT = 'YYYYMMDD'
 
@@ -28,33 +25,37 @@ function derivativesMapper(rawDerivative) {
         change_prev_week_long_perc: parseFloatOrReturnNull(rawDerivative.change_prev_week_long_perc),
     }
 }
+process.on('uncaughtException', (e) => {
+    console.log(e.message, e.name, e.stack)
+})
+async function main() {
+    try {
+        const daysArr = await dataArrayGenerator(365)
+        for (const day of daysArr) {
+            const data = await getDataByDay(day)
+            if (!data.length) continue
+            const formatted = data.map(derivativesMapper)
+            for (const row of formatted) {
 
-async function main(callback) {
-    const daysArr = await dataArrayGenerator(365)
-    for (const day of daysArr) {
-        const data = await getDataByDay(day)
-        if (!data.length) continue
-        const formatted = data.map(derivativesMapper)
-        // console.log(data, formatted)
-        for (const row of formatted) {
-
-            await DerivativeModel.updateOne({
-                date: row.date,
-                isin: row.isin,
-                iz_fiz: row.iz_fiz,
-                contract_type: row.contract_type
-            }, row, { upsert: true }) //todo unique
+                await DerivativeModel.updateOne({
+                    date: row.date,
+                    isin: row.isin,
+                    iz_fiz: row.iz_fiz,
+                    contract_type: row.contract_type
+                }, row, { upsert: true })
+            }
         }
+    } catch (e) {
+        console.log(999, e)
     }
 
-    if (callback) callback()
 }
 
 async function dataArrayGenerator(range) {
     const daysArr = []
     console.log(range)
     for (let i = 0; i < range; i++) {
-        const date = moment().subtract(i+1, 'd')
+        const date = moment().subtract(i, 'd')
             .set("hour", 0)
             .set("minute", 0)
             .set("second", 0)
@@ -77,35 +78,40 @@ async function getDataByDay(day) {
             try {
 
                 https.get(url, function (res) {
-                    res.pipe(csv({
-                        mapHeaders: ({ header, index }) => {
-                            if (index === 0) {
-                                return 'date' //moment in wrong encoding or idk
+                    try {
+                        res.pipe(csv({
+                            mapHeaders: ({ header, index }) => {
+                                if (index === 0) {
+                                    return 'date' //moment in wrong encoding or idk
+                                }
+                                return header.toLowerCase()
                             }
-                            return header.toLowerCase()
-                        }
-                    }))
-                        .on('data', (data) => results.push(data))
-                        .on('end', () => {
-                            resolve(results)
-                        })
-                        .on('error', (e) => { reject(e) })
+                        }))
+                            .on('data', (data) => results.push(data))
+                            .on('end', () => {
+                                resolve(results)
+                            })
+                            .on('error', (e) => {
+                                console.log(100000, e)
+                                reject(e)
+                            })
+                    } catch (e) {
+                        console.log(111, e)
+                        reject(e)
+                    }
                 });
             } catch (e) {
+                console.log(2222, e)
                 reject(e)
             }
         })
         const timeoutPromise = new Promise((resolve, reject) => { setTimeout(reject, 10000) })
         return await Promise.race([fetchDataPromise, timeoutPromise])
     } catch (e) {
+        console.log(3333, e)
         return getDataByDay(day)
     }
 }
 
-if (require.main === module) {
-    console.log('script is main, exit after done')
-    main(() => { process.exit(0) });
-} else {
-    console.log('script is module, no exit')
-    main()
-}
+
+module.exports = main
