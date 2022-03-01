@@ -54,7 +54,7 @@ async function dataArrayGenerator(range) {
     const daysArr = []
     console.log(range)
     for (let i = 0; i < range; i++) {
-        const date = moment().subtract(i, 'd')
+        const date = moment().subtract(i+1, 'd')
             .set("hour", 0)
             .set("minute", 0)
             .set("second", 0)
