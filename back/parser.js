@@ -10,7 +10,7 @@ const parseFloatOrReturnNull = (strNum) => parseFloat(strNum) || null
 
 function derivativesMapper(rawDerivative) {
     return {
-        date: moment(rawDerivative['date']).add(3, 'hours').toISOString(),
+        date: moment(rawDerivative['date']).utc(true).toISOString(),
         isin: rawDerivative.isin,
         name: rawDerivative.name,
         contract_type: rawDerivative.contract_type,
