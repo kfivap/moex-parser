@@ -5,7 +5,8 @@ import { combineReducers } from "redux";
 const initialState = {
     isinList: [],
     currentIsin: null,
-    currentIsinDerivativeData: null
+    currentIsinDerivativeData: null,
+    queryLimit: 120,
 }
 
 export const mainReducer = (state = initialState, action) => {

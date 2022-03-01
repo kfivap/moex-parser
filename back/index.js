@@ -22,8 +22,8 @@ app.get('/derivatives', async (req, res) => {
     }
     const limit = Number(req.query.limit) || 30
     const [fizDerivatives, nonFizDerivatives] = await Promise.all([
-        DerivativeModel.find({ ...query, iz_fiz: true }).limit(limit).sort({ date: 1 }),
-        DerivativeModel.find({ ...query, iz_fiz: false }).limit(limit).sort({ date: 1 })
+        DerivativeModel.find({ ...query, iz_fiz: true }).limit(limit).sort({ date: -1 }),
+        DerivativeModel.find({ ...query, iz_fiz: false }).limit(limit).sort({ date: -1 })
     ])
     return res.json({ fizDerivatives, nonFizDerivatives })
 })

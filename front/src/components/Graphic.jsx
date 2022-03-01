@@ -65,11 +65,12 @@ const Graphic = () => {
                         legend: {
                             position: 'top',
                         },
-                        // title: {
-                        // display: true,
-                        // text: 'Chart.js Line Chart',
-                        // },
-                    }
+                    },
+                    scales: {
+                        x: {
+                            reverse: true
+                        }
+                      },
                 }}
                     data={
                         {

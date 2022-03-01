@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useActions } from '../hooks/useActions';
 import settings from '../icons/settings.svg'
+import { useSelector } from 'react-redux';
+
 
 const QueryPicker = () => {
     const { setQueryLimit } = useActions()
-    useEffect(() => {
-        setQueryLimit(days[3])
-    }, [])
+    const { queryLimit } = useSelector(state => { return state.main })
+ 
 
     function changeLimitHandler(e) {
         setQueryLimit(e.target.value)
@@ -20,7 +21,7 @@ const QueryPicker = () => {
             Show last
             <select className='query-picker-select' onChange={changeLimitHandler}>
                 {days.map((day)=>{
-                   return <option key={day} >{day}</option>
+                   return <option key={day} selected={queryLimit === day} >{day}</option>
                 })}
             </select>
             days
