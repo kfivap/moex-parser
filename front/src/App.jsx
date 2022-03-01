@@ -5,12 +5,12 @@ import { useEffect } from "react";
 
 function App() {
   //temporary
-  useEffect(() => {
-    async function fetchData(){
-      await fetch('http://localhost:5000/fetch-data')
-    }
-    fetchData()
-  }, [])
+  // useEffect(() => {
+  //   async function fetchData(){
+  //     await fetch('http://localhost:5000/fetch-data')
+  //   }
+  //   fetchData()
+  // }, [])
 
   return (
     <div className="App">

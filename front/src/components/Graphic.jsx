@@ -27,7 +27,7 @@ ChartJS.register(
 
 
 const Graphic = () => {
-    const { currentIsin } = useSelector(state => { return state.main })
+    const { currentIsin, queryLimit } = useSelector(state => { return state.main })
     const { setCurrentIsinDerivativeData } = useActions()
 
 
@@ -35,13 +35,14 @@ const Graphic = () => {
     useEffect(() => {
         async function fetchData() {
             if (!currentIsin) return
-            const response = await fetch(`http://localhost:5000/derivatives?isin=${currentIsin?.isin}`)
+
+            const response = await fetch(`http://localhost:5000/derivatives?isin=${currentIsin?.isin}&limit=${queryLimit}`)
             const respJson = await response.json()
             setDerivativeData(respJson)
             setCurrentIsinDerivativeData({ fiz: respJson.fizDerivatives[respJson.fizDerivatives.length - 1], legal: respJson.nonFizDerivatives[respJson.nonFizDerivatives.length - 1] })
         }
         fetchData();
-    }, [currentIsin])
+    }, [currentIsin, queryLimit])
     if (!derivativeData) {
         return <h1>please set isin</h1>
     }

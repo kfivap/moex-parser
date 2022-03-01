@@ -16,6 +16,8 @@ export const mainReducer = (state = initialState, action) => {
             return { ...state, currentIsin: action.payload }
         case 'setCurrentIsinDerivativeData':
             return { ...state, currentIsinDerivativeData: action.payload }
+        case 'setQueryLimit':
+            return { ...state, queryLimit: action.payload }
         default:
             console.log('warning!!! default reducer')
             return state

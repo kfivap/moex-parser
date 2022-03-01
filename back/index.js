@@ -20,7 +20,7 @@ app.get('/derivatives', async (req, res) => {
     const query = {
         isin, contract_type: 'F'
     }
-    const limit = 10
+    const limit = Number(req.query.limit) || 30
     const [fizDerivatives, nonFizDerivatives] = await Promise.all([
         DerivativeModel.find({ ...query, iz_fiz: true }).limit(limit).sort({ date: 1 }),
         DerivativeModel.find({ ...query, iz_fiz: false }).limit(limit).sort({ date: 1 })
@@ -28,14 +28,9 @@ app.get('/derivatives', async (req, res) => {
     return res.json({ fizDerivatives, nonFizDerivatives })
 })
 
-app.get('/fetch-data', async (req, res) => {
-    const dataExist = await DerivativeModel.count()
-    if (dataExist) return res.json({ message: 'data already exist' })
-    require('./parser')
-    res.sendStatus(200)
-})
 
 app.get('/isin', async (req, res) => {
+    require('./parser') //temporary
     const isinList = await DerivativeModel.aggregate([
         {
             $match: {
