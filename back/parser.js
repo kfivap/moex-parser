@@ -30,7 +30,8 @@ process.on('uncaughtException', (e) => {
 })
 async function main() {
     try {
-        const daysArr = await dataArrayGenerator(365)
+        const daysArr = await dataArrayGenerator(7)
+        console.log('daysArr', daysArr)
         for (const day of daysArr) {
             const data = await getDataByDay(day)
             if (!data.length) continue
@@ -74,10 +75,13 @@ async function getDataByDay(day) {
         const fetchDataPromise = new Promise((resolve, reject) => {
             const results = [];
             const url = `https://www.moex.com/ru/derivatives/open-positions-csv.aspx?d=${day}&t=1`
+            const headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+            }
+
             console.log(url)
             try {
-
-                https.get(url, function (res) {
+                https.get(url, { headers }, function (res) {
                     try {
                         res.pipe(csv({
                             mapHeaders: ({ header, index }) => {
