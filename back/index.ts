@@ -2,11 +2,11 @@ import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
 const app = express()
-import { fetchData } from './parser'
+import { createDbData } from './parser'
 import { DerivativeModel, MatchDerivativeModel } from './models'
 import { contractTypes } from './constants'
 mongoose.connect(`mongodb://${process.env.MONGO_URI || 'localhost:27017'}/moexdb`, {});
-fetchData()
+createDbData()
 
 app.use(cors())
 app.use(express.json())

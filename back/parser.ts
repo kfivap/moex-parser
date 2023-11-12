@@ -38,63 +38,101 @@ process.on('uncaughtException', (e) => {
     console.log(e.message, e.name, e.stack)
 })
 
-async function matchDerivativesByDate(date: Date) {
-    console.log('matchDerivativesByDate', date)
-    const derivatives = await DerivativeModel.distinct('isin', { date })
-    for (const isin of derivatives) {
-        const contractType = contractTypes.futures
-        const [fiz, legal] = await Promise.all([
-            DerivativeModel.findOne({ date, iz_fiz: true, isin, contract_type: contractType }),
-            DerivativeModel.findOne({ date, iz_fiz: false, isin, contract_type: contractType })
-        ])
+function matchDerivativesByDate(date: Date, isin: string, fiz, legal) {
+    const contractType = contractTypes.futures
 
-        const legalLongToFizLong = ((legal?.long_position || 0) / (fiz?.long_position || 0)).toFixed(2)
-        const legalShortToFizShort = ((legal?.short_position || 0) / (fiz?.short_position || 0)).toFixed(2)
+    const legalLongToFizLong = (((legal?.long_position || 0) / (fiz?.long_position || 0)) || 0).toFixed(2)
+    const legalShortToFizShort = (((legal?.short_position || 0) / (fiz?.short_position || 0)) || 0).toFixed(2)
 
-        const legalShortToFizLong = ((legal?.short_position || 0) / (fiz?.long_position || 0)).toFixed(2)
-        const legalLongToFizShort = ((legal?.long_position || 0) / (fiz?.short_position || 0)).toFixed(2)
+    const legalShortToFizLong = (((legal?.short_position || 0) / (fiz?.long_position || 0)) || 0).toFixed(2)
+    const legalLongToFizShort = (((legal?.long_position || 0) / (fiz?.short_position || 0)) || 0).toFixed(2)
 
-
-        const data = {
-            date: date,
-            isin: isin,
-            contract_type: contractType,
-            fizModel: fiz?._id,
-            legalModel: legal?._id,
-            legalLongToFizLong,
-            legalShortToFizShort,
-            legalShortToFizLong,
-            legalLongToFizShort,
-        }
-
-        await MatchDerivativeModel.updateOne({
-            date: data.date,
-            isin: data.isin,
-            contract_type: data.contract_type
-        }, data, { upsert: true })
+    const data = {
+        date: date,
+        isin: isin,
+        contract_type: contractType,
+        fizModel: fiz?._id,
+        legalModel: legal?._id,
+        legalLongToFizLong,
+        legalShortToFizShort,
+        legalShortToFizLong,
+        legalLongToFizShort,
     }
+
+    return data
+    // await MatchDerivativeModel.updateOne({
+        // date: data.date,
+        // isin: data.isin,
+        // contract_type: data.contract_type
+    // }, data, { upsert: true })
+    // }
 }
 
 
-export async function fetchData() {
+export async function createDbData() {
     try {
-        const daysArr = await dataArrayGenerator(7)
-        console.log('daysArr', daysArr)
+        const daysArr = await dataArrayGenerator(365)
         for (const day of daysArr) {
             const data = await getDataByDay(day.formatted)
 
             if (!data.length) continue
             const formatted = data.map(derivativesMapper)
-            for (const row of formatted) {
-                await DerivativeModel.updateOne({
-                    date: row.date,
-                    isin: row.isin,
-                    iz_fiz: row.iz_fiz,
-                    contract_type: row.contract_type
-                }, row, { upsert: true })
-            }
-            await matchDerivativesByDate(day.date.toDate())
 
+            const couples: {
+                [isin: string]: {
+                    [contractType: string]: {
+                        fiz?: Record<string, unknown>,
+                        legal?: Record<string, unknown>
+                    }
+                }
+            } = {}
+            const bulkDerivativeOps = []
+            for (const row of formatted) {
+                // couples
+                if (!couples[row.isin]) {
+                    couples[row.isin] = {}
+                }
+                if (!couples[row.isin][row.contract_type]) {
+                    couples[row.isin][row.contract_type] = {}
+                }
+                const fizOrLegal = row.iz_fiz ? 'fiz' : 'legal'
+                couples[row.isin][row.contract_type][fizOrLegal] = row
+
+                // bulk ops
+                bulkDerivativeOps.push({
+                    updateOne: {
+                        filter: {
+                            date: row.date,
+                            isin: row.isin,
+                            iz_fiz: row.iz_fiz,
+                            contract_type: row.contract_type
+                        },
+                        update: { $set: row },
+                        upsert: true
+                    }
+                })
+            }
+            await DerivativeModel.bulkWrite(bulkDerivativeOps);
+            console.log('fetchData, bulkDerivativeOps done')
+
+            const bulkMatchOps = []
+            for (const isin in couples) {
+                const result =  matchDerivativesByDate(day.date.toDate(), isin, couples[isin]?.[contractTypes.futures].fiz, couples[isin]?.[contractTypes.futures].legal)
+
+                bulkMatchOps.push({
+                    updateOne: {
+                        filter: {
+                            date: result.date,
+                            isin: result.isin,
+                            contract_type: result.contract_type
+                        },
+                        update: { $set: result },
+                        upsert: true
+                    }
+                })
+            }
+            await MatchDerivativeModel.bulkWrite(bulkMatchOps);
+            console.log('fetchData, bulkMatchOps done')
         }
     } catch (e) {
         console.log(999, e)
@@ -141,16 +179,14 @@ async function getLocalOrFetchFile(day: string): Promise<ReadStream> {
         try {
             https.get(url, { headers }, function (res) {
                 try {
-                    // Save the original response to a file
                     res.pipe(originalResponseStream)
-                        .on('end', () => {
+                        .on('close', () => {
                             originalResponseStream.close()
                             resolve(results)
                         })
                         .on('error', (e) => {
                             reject(e)
                         })
-
                 } catch (e) {
                     console.log(111, e)
                     reject(e)
@@ -161,11 +197,14 @@ async function getLocalOrFetchFile(day: string): Promise<ReadStream> {
             reject(e)
         }
     })
-    const timeoutPromise = new Promise((_, reject) => { setTimeout(reject, 10000) })
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+            reject()
+        }, 10000)
+    })
     await Promise.race([fetchDataPromise, timeoutPromise])
 
     return getLocalOrFetchFile(day)
-
 }
 
 async function getDataByDay(day: string) {
