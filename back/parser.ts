@@ -1,16 +1,22 @@
 // https://www.moex.com/ru/derivatives/open-positions-csv.aspx?d=20220125&t=1
-const https = require('https')
-const csv = require('csv-parser')
-const moment = require('moment')
-const { DerivativeModel } = require('./models');
+import https from 'https'
+import csv from 'csv-parser'
+import moment from "moment";
+import { DerivativeModel, MatchDerivativeModel } from './models';
+import { contractTypes } from './constants';
 
 const CSV_DOCUMENT_DATE_FORMAT = 'YYYYMMDD'
 
 const parseFloatOrReturnNull = (strNum) => parseFloat(strNum) || null
 
+type DateWithFormatted = {
+    formatted: string,
+    date: moment.Moment
+}
+
 function derivativesMapper(rawDerivative) {
     return {
-        date: moment(rawDerivative['date']).utc(true).toISOString(),
+        date: moment(rawDerivative['date']).utc(true).toDate(),
         isin: rawDerivative.isin,
         name: rawDerivative.name,
         contract_type: rawDerivative.contract_type,
@@ -28,16 +34,48 @@ function derivativesMapper(rawDerivative) {
 process.on('uncaughtException', (e) => {
     console.log(e.message, e.name, e.stack)
 })
+
+async function matchDerivativesByDate(date: Date) {
+    console.log('matchDerivativesByDate', date)
+    const derivatives = await DerivativeModel.distinct('isin', { date })
+    console.log(derivatives)
+    for (const isin of derivatives) {
+        const contractType = contractTypes.futures
+        const [fiz, legal] = await Promise.all([
+            DerivativeModel.findOne({ iz_fiz: true, isin, contract_type: contractType }),
+            DerivativeModel.findOne({ iz_fiz: false, isin, contract_type: contractType })
+        ])
+
+        const legalToFizLongPositions = ((legal?.long_position || 0) / (fiz?.long_position || 0)).toFixed(2)
+        const legalToFizShortPositions = ((legal?.short_position || 0) / (fiz?.short_position || 0)).toFixed(2)
+
+        const data = {
+            date: date,
+            isin: isin,
+            contract_type: contractType,
+            legalToFizLongPositions,
+            legalToFizShortPositions
+        }
+
+        await MatchDerivativeModel.updateOne({
+            date: data.date,
+            isin: data.isin,
+            contract_type: data.contract_type
+        }, data, { upsert: true })
+    }
+}
+
+
 export async function fetchData() {
     try {
         const daysArr = await dataArrayGenerator(7)
         console.log('daysArr', daysArr)
         for (const day of daysArr) {
-            const data = await getDataByDay(day)
+            const data = await getDataByDay(day.formatted)
+
             if (!data.length) continue
             const formatted = data.map(derivativesMapper)
             for (const row of formatted) {
-
                 await DerivativeModel.updateOne({
                     date: row.date,
                     isin: row.isin,
@@ -45,6 +83,8 @@ export async function fetchData() {
                     contract_type: row.contract_type
                 }, row, { upsert: true })
             }
+            await matchDerivativesByDate(day.date.toDate())
+
         }
     } catch (e) {
         console.log(999, e)
@@ -52,8 +92,8 @@ export async function fetchData() {
 
 }
 
-async function dataArrayGenerator(range) {
-    const daysArr: string[] = []
+async function dataArrayGenerator(range): Promise<DateWithFormatted[]> {
+    const daysArr: DateWithFormatted[] = []
     console.log(range)
     for (let i = 0; i < range; i++) {
         const date = moment().subtract(i, 'd')
@@ -65,12 +105,15 @@ async function dataArrayGenerator(range) {
             .toISOString()
         const docsExist = await DerivativeModel.findOne({ date: date })
         if (docsExist) break
-        daysArr.push(moment(date).utc(true).format(CSV_DOCUMENT_DATE_FORMAT))
+        daysArr.push({
+            date: moment(date).utc(false),
+            formatted: moment(date).utc(true).format(CSV_DOCUMENT_DATE_FORMAT)
+        })
     }
     return daysArr
 }
 
-async function getDataByDay(day) {
+async function getDataByDay(day: string) {
     try {
         const fetchDataPromise = new Promise((resolve, reject) => {
             const results: any[] = [];

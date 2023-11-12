@@ -4,6 +4,7 @@ import mongoose from 'mongoose'
 const app = express()
 import {fetchData} from './parser'
 import {DerivativeModel} from './models'
+import { contractTypes } from './constants'
 console.log(process.env.MONGO_URI)
 mongoose.connect(`mongodb://${process.env.MONGO_URI || 'localhost:27017'}/moexdb`, {});
 fetchData()
@@ -20,7 +21,7 @@ app.get('/derivatives', async (req, res) => {
     const { isin } = req.query
     if (!isin) return res.sendStatus(400)
     const query = {
-        isin, contract_type: 'F'
+        isin, contract_type: contractTypes.futures
     }
     const limit = Number(req.query.limit) || 30
     const [fizDerivatives, nonFizDerivatives] = await Promise.all([
@@ -35,7 +36,7 @@ app.get('/isin', async (req, res) => {
     const isinList = await DerivativeModel.aggregate([
         {
             $match: {
-                contract_type: 'F'
+                contract_type: contractTypes.futures
             }
         },
         {
@@ -99,4 +100,4 @@ app.use((req, res) => {
     res.sendStatus(404)
 })
 
-app.listen(5000, async () => { console.log('http://localhost:5000') })
+app.listen(5000, async () => { console.log('listen on http://localhost:5000') })
