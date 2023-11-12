@@ -15,7 +15,7 @@ const derivativeSchema = new Schema({
     change_prev_week_long_abs: Number,
     change_prev_week_short_perc: Number,
     change_prev_week_long_perc: Number,
-}, { strict: false });
+});
 
 derivativeSchema.index(
     { date: 1, isin: 1, iz_fiz: 1, contract_type: 1 },
@@ -24,9 +24,11 @@ derivativeSchema.index(
 export const DerivativeModel = mongoose.model("derivatives", derivativeSchema);
 
 const matchDerivativesSchema = new Schema({
-    moment: Date,
+    date: Date,
     isin: String,
     contract_type: String,
+    fizModel: mongoose.Types.ObjectId,
+    legalModel: mongoose.Types.ObjectId,
     legalToFizLongPositions: Number,
     legalToFizShortPositions: Number,
 })

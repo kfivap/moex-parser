@@ -2,8 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
 const app = express()
-import {fetchData} from './parser'
-import {DerivativeModel} from './models'
+import { fetchData } from './parser'
+import { DerivativeModel, MatchDerivativeModel } from './models'
 import { contractTypes } from './constants'
 console.log(process.env.MONGO_URI)
 mongoose.connect(`mongodb://${process.env.MONGO_URI || 'localhost:27017'}/moexdb`, {});
@@ -24,11 +24,15 @@ app.get('/derivatives', async (req, res) => {
         isin, contract_type: contractTypes.futures
     }
     const limit = Number(req.query.limit) || 30
-    const [fizDerivatives, nonFizDerivatives] = await Promise.all([
+
+    console.log(query)
+    const [fizDerivatives, legalDerivatives, matchData] = await Promise.all([
         DerivativeModel.find({ ...query, iz_fiz: true }).limit(limit).sort({ date: -1 }),
-        DerivativeModel.find({ ...query, iz_fiz: false }).limit(limit).sort({ date: -1 })
+        DerivativeModel.find({ ...query, iz_fiz: false }).limit(limit).sort({ date: -1 }),
+        MatchDerivativeModel.find({ ...query }).limit(limit).sort({ date: -1 })
     ])
-    return res.json({ fizDerivatives, nonFizDerivatives })
+
+    return res.json({ fizDerivatives, legalDerivatives, matchData })
 })
 
 

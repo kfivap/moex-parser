@@ -38,12 +38,11 @@ process.on('uncaughtException', (e) => {
 async function matchDerivativesByDate(date: Date) {
     console.log('matchDerivativesByDate', date)
     const derivatives = await DerivativeModel.distinct('isin', { date })
-    console.log(derivatives)
     for (const isin of derivatives) {
         const contractType = contractTypes.futures
         const [fiz, legal] = await Promise.all([
-            DerivativeModel.findOne({ iz_fiz: true, isin, contract_type: contractType }),
-            DerivativeModel.findOne({ iz_fiz: false, isin, contract_type: contractType })
+            DerivativeModel.findOne({ date, iz_fiz: true, isin, contract_type: contractType }),
+            DerivativeModel.findOne({ date, iz_fiz: false, isin, contract_type: contractType })
         ])
 
         const legalToFizLongPositions = ((legal?.long_position || 0) / (fiz?.long_position || 0)).toFixed(2)
@@ -53,6 +52,8 @@ async function matchDerivativesByDate(date: Date) {
             date: date,
             isin: isin,
             contract_type: contractType,
+            fizModel: fiz?._id,
+            legalModel: legal?._id,
             legalToFizLongPositions,
             legalToFizShortPositions
         }

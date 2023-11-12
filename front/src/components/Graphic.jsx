@@ -39,7 +39,7 @@ const Graphic = () => {
             const response = await fetch(`http://localhost:5000/derivatives?isin=${currentIsin?.isin}&limit=${queryLimit}`)
             const respJson = await response.json()
             setDerivativeData(respJson)
-            setCurrentIsinDerivativeData({ fiz: respJson.fizDerivatives[respJson.fizDerivatives.length - 1], legal: respJson.nonFizDerivatives[respJson.nonFizDerivatives.length - 1] })
+            setCurrentIsinDerivativeData({ fiz: respJson.fizDerivatives[respJson.fizDerivatives.length - 1], legal: respJson.legalDerivatives[respJson.legalDerivatives.length - 1], match: respJson.matchData[respJson.matchData.length - 1] })
         }
         fetchData();
     }, [currentIsin, queryLimit])
@@ -70,7 +70,7 @@ const Graphic = () => {
                         x: {
                             reverse: true
                         }
-                      },
+                    },
                 }}
                     data={
                         {
@@ -88,12 +88,12 @@ const Graphic = () => {
                                 },
                                 {
                                     label: 'Legal Short',
-                                    data: getGraphicData('nonFizDerivatives', 'short_position'),
+                                    data: getGraphicData('legalDerivatives', 'short_position'),
                                     borderColor: '#ff9500',
                                 },
                                 {
                                     label: 'legal Long',
-                                    data: getGraphicData('nonFizDerivatives', 'long_position'),
+                                    data: getGraphicData('legalDerivatives', 'long_position'),
                                     borderColor: '#22ff00',
                                     // backgroundColor: '22ff00',
                                 },
