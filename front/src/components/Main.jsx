@@ -1,12 +1,12 @@
 import React from 'react';
-import Graphic from './Graphic';
+import OpenPositionsChart from './OpenPositionsChart';
 import QueryPicker from './QueryPicker';
 
 const Main = () => {
     return (
         <div className='main'>
             <QueryPicker/>
-            <Graphic/>
+            <OpenPositionsChart/>
         </div>
     );
 };

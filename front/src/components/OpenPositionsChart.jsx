@@ -26,7 +26,7 @@ ChartJS.register(
 );
 
 
-const Graphic = () => {
+const OpenPositionsChart = () => {
     const { currentIsin, queryLimit } = useSelector(state => { return state.main })
     const { setCurrentIsinDerivativeData } = useActions()
 
@@ -38,6 +38,7 @@ const Graphic = () => {
 
             const response = await fetch(`http://localhost:5000/derivatives?isin=${currentIsin?.isin}&limit=${queryLimit}`)
             const respJson = await response.json()
+            console.log(respJson)
             setDerivativeData(respJson)
             setCurrentIsinDerivativeData({ fiz: respJson.fizDerivatives[respJson.fizDerivatives.length - 1], legal: respJson.legalDerivatives[respJson.legalDerivatives.length - 1], match: respJson.matchData[respJson.matchData.length - 1] })
         }
@@ -72,37 +73,35 @@ const Graphic = () => {
                         }
                     },
                 }}
-                    data={
-                        {
-                            labels: getLabels(),
-                            datasets: [
-                                {
-                                    label: 'Fiz Short',
-                                    data: getGraphicData('fizDerivatives', 'short_position'),
-                                    borderColor: '#de1212',
-                                },
-                                {
-                                    label: 'Fiz Long',
-                                    data: getGraphicData('fizDerivatives', 'long_position'),
-                                    borderColor: '#24c0e3',
-                                },
-                                {
-                                    label: 'Legal Short',
-                                    data: getGraphicData('legalDerivatives', 'short_position'),
-                                    borderColor: '#ff9500',
-                                },
-                                {
-                                    label: 'legal Long',
-                                    data: getGraphicData('legalDerivatives', 'long_position'),
-                                    borderColor: '#22ff00',
-                                    // backgroundColor: '22ff00',
-                                },
-                            ],
-                        }
-                    } />
+                    data={{
+                        labels: getLabels(),
+                        datasets: [
+                            {
+                                label: 'Fiz Short',
+                                data: getGraphicData('fizDerivatives', 'short_position'),
+                                borderColor: '#de1212',
+                            },
+                            {
+                                label: 'Fiz Long',
+                                data: getGraphicData('fizDerivatives', 'long_position'),
+                                borderColor: '#24c0e3',
+                            },
+                            {
+                                label: 'Legal Short',
+                                data: getGraphicData('legalDerivatives', 'short_position'),
+                                borderColor: '#ff9500',
+                            },
+                            {
+                                label: 'legal Long',
+                                data: getGraphicData('legalDerivatives', 'long_position'),
+                                borderColor: '#22ff00',
+                                // backgroundColor: '22ff00',
+                            },
+                        ],
+                    }} />
             </div>
         </div>
     );
 };
 
-export default Graphic;
+export default OpenPositionsChart;
