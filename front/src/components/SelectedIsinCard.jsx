@@ -38,14 +38,11 @@ const SelectedIsinCard = () => {
                 </div>
                 <div className='isin-info-elem'>
                     <b>match data</b> <br />
-                    {/* legal/fiz clients in long {(currentIsinDerivativeData?.legal?.clients_in_long / currentIsinDerivativeData?.fiz?.clients_in_long).toFixed(2)}<br />
-                    legal/fiz clients in short: {(currentIsinDerivativeData?.legal?.clients_in_short / currentIsinDerivativeData?.fiz?.clients_in_long).toFixed(2)}<br /> */}
                     <hr />
-                    {/* legal/fiz long position {(currentIsinDerivativeData?.legal?.long_position / currentIsinDerivativeData?.fiz?.long_position).toFixed(2)}<br /> */}
-                    legal/fiz long position {currentIsinDerivativeData?.match?.legalToFizLongPositions}<br />
-
-                    {/* legal/fiz short position {(currentIsinDerivativeData?.legal?.short_position / currentIsinDerivativeData?.fiz?.short_position).toFixed(2)}<br /> */}
-                    legal/fiz short position {currentIsinDerivativeData?.match?.legalToFizShortPositions}<br />
+                    Legal LONG to fiz LONG: {currentIsinDerivativeData?.match?.legalLongToFizLong}<br />
+                    Legal SHORT to fiz SHORT: {currentIsinDerivativeData?.match?.legalShortToFizShort}<br />
+                    Legal SHORT to fiz LONG: {currentIsinDerivativeData?.match?.legalShortToFizLong}<br />
+                    Legal LONG to fiz SHORT: {currentIsinDerivativeData?.match?.legalLongToFizShort}<br />
                 </div>
             </div>
 

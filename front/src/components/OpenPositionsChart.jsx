@@ -56,7 +56,7 @@ const OpenPositionsChart = () => {
         return derivativeData[izFiz].map(der => der[positionType]) // number array
     }
 
-    // legalToFizLongPositions or legalToFizShortPositions
+    // legalLongToFizLong , legalShortToFizShort , legalShortToFizLong , legalLongToFizShort
     const getMatchingData = (dataType)=>{
         return derivativeData.matchData?.map(data => data[dataType]) // number array
     }
@@ -117,17 +117,33 @@ const OpenPositionsChart = () => {
                                 borderColor: '#22ff00',
                                 yAxisID: 'y',
                             },
+
                             {
-                                label: 'Legal/fiz LONG',
-                                data: getMatchingData('legalToFizLongPositions'),
+                                label: 'Legal LONG fiz LONG',
+                                data: getMatchingData('legalLongToFizLong'),
                                 borderColor: '#031cfc',
+                                borderDash: [5, 15],
+                                yAxisID: 'y1',
+                            },
+                            {
+                                label: 'Legal SHORT fiz SHORT',
+                                data: getMatchingData('legalShortToFizShort'),
+                                borderColor: '#fc03cf',
+                                borderDash: [5, 15],
+                                yAxisID: 'y1',
+                            },
+
+                            {
+                                label: 'Legal SHORT to fiz LONG',
+                                data: getMatchingData('legalShortToFizLong'),
+                                borderColor: '#fc0303',
                                 borderDash: [5, 5],
                                 yAxisID: 'y1',
                             },
                             {
-                                label: 'Legal/fiz SHORT',
-                                data: getMatchingData('legalToFizShortPositions'),
-                                borderColor: '#fc03cf',
+                                label: 'Legal LONG to fiz SHORT',
+                                data: getMatchingData('legalLongToFizShort'),
+                                borderColor: '#20fc03',
                                 borderDash: [5, 5],
                                 yAxisID: 'y1',
                             }

@@ -29,8 +29,12 @@ const matchDerivativesSchema = new Schema({
     contract_type: String,
     fizModel: mongoose.Types.ObjectId,
     legalModel: mongoose.Types.ObjectId,
-    legalToFizLongPositions: Number,
-    legalToFizShortPositions: Number,
+
+    legalLongToFizLong: Number, // во сколько раз лонги юрлиц больше лонгов физлиц
+    legalShortToFizShort: Number, // во сколько раз шорты юрлиц больше шортов физлиц
+
+    legalShortToFizLong: Number, // во сколько раз шорты юрлиц больше лонгов физлиц
+    legalLongToFizShort: Number // во сколько раз лонги физлиц больше шортов физлиц
 })
 matchDerivativesSchema.index(
     { date: 1, isin: 1, iz_fiz: 1, contract_type: 1 },

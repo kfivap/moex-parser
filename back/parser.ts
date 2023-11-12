@@ -45,8 +45,12 @@ async function matchDerivativesByDate(date: Date) {
             DerivativeModel.findOne({ date, iz_fiz: false, isin, contract_type: contractType })
         ])
 
-        const legalToFizLongPositions = ((legal?.long_position || 0) / (fiz?.long_position || 0)).toFixed(2)
-        const legalToFizShortPositions = ((legal?.short_position || 0) / (fiz?.short_position || 0)).toFixed(2)
+        const legalLongToFizLong = ((legal?.long_position || 0) / (fiz?.long_position || 0)).toFixed(2)
+        const legalShortToFizShort = ((legal?.short_position || 0) / (fiz?.short_position || 0)).toFixed(2)
+
+        const legalShortToFizLong = ((legal?.short_position || 0) / (fiz?.long_position || 0)).toFixed(2)
+        const legalLongToFizShort = ((legal?.long_position || 0) / (fiz?.short_position || 0)).toFixed(2)
+
 
         const data = {
             date: date,
@@ -54,8 +58,10 @@ async function matchDerivativesByDate(date: Date) {
             contract_type: contractType,
             fizModel: fiz?._id,
             legalModel: legal?._id,
-            legalToFizLongPositions,
-            legalToFizShortPositions
+            legalLongToFizLong,
+            legalShortToFizShort,
+            legalShortToFizLong,
+            legalLongToFizShort,
         }
 
         await MatchDerivativeModel.updateOne({
