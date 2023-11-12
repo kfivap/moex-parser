@@ -4,6 +4,9 @@ import csv from 'csv-parser'
 import moment from "moment";
 import { DerivativeModel, MatchDerivativeModel } from './models';
 import { contractTypes } from './constants';
+import * as path from 'path'
+import { access } from 'fs/promises'
+import { createWriteStream, createReadStream, ReadStream } from 'fs'
 
 const CSV_DOCUMENT_DATE_FORMAT = 'YYYYMMDD'
 
@@ -101,7 +104,6 @@ export async function fetchData() {
 
 async function dataArrayGenerator(range): Promise<DateWithFormatted[]> {
     const daysArr: DateWithFormatted[] = []
-    console.log(range)
     for (let i = 0; i < range; i++) {
         const date = moment().subtract(i, 'd')
             .set("hour", 0)
@@ -120,47 +122,80 @@ async function dataArrayGenerator(range): Promise<DateWithFormatted[]> {
     return daysArr
 }
 
+async function getLocalOrFetchFile(day: string): Promise<ReadStream> {
+    const filePath = path.join(__dirname, './derivatives_files', `${day}.csv`)
+    const fileExists = await access(filePath).then(() => true).catch(() => false)
+    console.log('fileExists', day, fileExists)
+    if (fileExists) {
+        return createReadStream(filePath)
+    }
+
+    const fetchDataPromise = new Promise((resolve, reject) => {
+        const results: any[] = [];
+        const url = `https://www.moex.com/ru/derivatives/open-positions-csv.aspx?d=${day}&t=1`
+        const headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+        }
+        const originalResponseStream = createWriteStream(filePath);
+        console.log(url)
+        try {
+            https.get(url, { headers }, function (res) {
+                try {
+                    // Save the original response to a file
+                    res.pipe(originalResponseStream)
+                        .on('end', () => {
+                            originalResponseStream.close()
+                            resolve(results)
+                        })
+                        .on('error', (e) => {
+                            reject(e)
+                        })
+
+                } catch (e) {
+                    console.log(111, e)
+                    reject(e)
+                }
+            });
+        } catch (e) {
+            console.log(2222, e)
+            reject(e)
+        }
+    })
+    const timeoutPromise = new Promise((_, reject) => { setTimeout(reject, 10000) })
+    await Promise.race([fetchDataPromise, timeoutPromise])
+
+    return getLocalOrFetchFile(day)
+
+}
+
 async function getDataByDay(day: string) {
     try {
-        const fetchDataPromise = new Promise((resolve, reject) => {
-            const results: any[] = [];
-            const url = `https://www.moex.com/ru/derivatives/open-positions-csv.aspx?d=${day}&t=1`
-            const headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
-            }
+        const dataRaw = await getLocalOrFetchFile(day)
 
-            console.log(url)
-            try {
-                https.get(url, { headers }, function (res) {
-                    try {
-                        res.pipe(csv({
-                            mapHeaders: ({ header, index }) => {
-                                if (index === 0) {
-                                    return 'date' //moment in wrong encoding or idk
-                                }
-                                return header.toLowerCase()
-                            }
-                        }))
-                            .on('data', (data) => results.push(data))
-                            .on('end', () => {
-                                resolve(results)
-                            })
-                            .on('error', (e) => {
-                                console.log(100000, e)
-                                reject(e)
-                            })
-                    } catch (e) {
-                        console.log(111, e)
-                        reject(e)
+        const results: any[] = [];
+
+        return new Promise((resolve, reject) => {
+            dataRaw
+                .pipe(csv({
+                    mapHeaders: ({ header, index }) => {
+                        if (index === 0) {
+                            return 'date' //moment in wrong encoding or idk
+                        }
+                        return header.toLowerCase()
                     }
-                });
-            } catch (e) {
-                console.log(2222, e)
-                reject(e)
-            }
+                }))
+                .on('data', (data) => {
+                    results.push(data)
+                })
+                .on('error', (e) => {
+                    dataRaw.close()
+                    reject(e)
+                })
+                .on('end', () => {
+                    dataRaw.close()
+                    resolve(results)
+                })
         })
-        const timeoutPromise = new Promise((resolve, reject) => { setTimeout(reject, 10000) })
-        return await Promise.race([fetchDataPromise, timeoutPromise])
     } catch (e) {
         console.log(3333, e)
         return getDataByDay(day)
