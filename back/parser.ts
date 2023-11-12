@@ -28,7 +28,7 @@ function derivativesMapper(rawDerivative) {
 process.on('uncaughtException', (e) => {
     console.log(e.message, e.name, e.stack)
 })
-async function main() {
+export async function fetchData() {
     try {
         const daysArr = await dataArrayGenerator(7)
         console.log('daysArr', daysArr)
@@ -53,7 +53,7 @@ async function main() {
 }
 
 async function dataArrayGenerator(range) {
-    const daysArr = []
+    const daysArr: string[] = []
     console.log(range)
     for (let i = 0; i < range; i++) {
         const date = moment().subtract(i, 'd')
@@ -73,7 +73,7 @@ async function dataArrayGenerator(range) {
 async function getDataByDay(day) {
     try {
         const fetchDataPromise = new Promise((resolve, reject) => {
-            const results = [];
+            const results: any[] = [];
             const url = `https://www.moex.com/ru/derivatives/open-positions-csv.aspx?d=${day}&t=1`
             const headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
@@ -116,6 +116,3 @@ async function getDataByDay(day) {
         return getDataByDay(day)
     }
 }
-
-
-module.exports = main

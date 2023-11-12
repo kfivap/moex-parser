@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose'
 const Schema = mongoose.Schema;
 
 const derivativeSchema = new Schema({
@@ -21,5 +21,4 @@ derivativeSchema.index(
     { date: 1, isin: 1, iz_fiz: 1, contract_type: 1 },
     { unique: true }
 )
-const DerivativeModel = mongoose.model("derivatives", derivativeSchema);
-exports.DerivativeModel = DerivativeModel
+export const DerivativeModel = mongoose.model("derivatives", derivativeSchema);

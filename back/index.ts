@@ -1,11 +1,11 @@
-const express = require('express')
-const cors = require('cors')
+import express from 'express'
+import cors from 'cors'
+import mongoose from 'mongoose'
 const app = express()
-const mongoose = require("mongoose");
-const fetchData = require('./parser')
-const { DerivativeModel } = require('./models')
+import {fetchData} from './parser'
+import {DerivativeModel} from './models'
 console.log(process.env.MONGO_URI)
-mongoose.connect(`mongodb://${process.env.MONGO_URI || 'localhost:27017'}/moexdb`, { useUnifiedTopology: true, useNewUrlParser: true });
+mongoose.connect(`mongodb://${process.env.MONGO_URI || 'localhost:27017'}/moexdb`, {});
 fetchData()
 
 app.use(cors())
