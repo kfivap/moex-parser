@@ -8,6 +8,7 @@ import {
     Title,
     Tooltip,
     Legend,
+    Utils
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import moment from 'moment'
@@ -51,9 +52,15 @@ const OpenPositionsChart = () => {
     const getLabels = () => {
         return derivativeData.fizDerivatives.map(der => moment(der.date).format('DD-MM-YY'))
     }
-    const getGraphicData = (izFiz, positionType) => {
-        return derivativeData[izFiz].map(der => der[positionType])
+    const getOpenPositionsData = (izFiz, positionType) => {
+        return derivativeData[izFiz].map(der => der[positionType]) // number array
     }
+
+    // legalToFizLongPositions or legalToFizShortPositions
+    const getMatchingData = (dataType)=>{
+        return derivativeData.matchData?.map(data => data[dataType]) // number array
+    }
+
 
     return (
         <div>
@@ -70,6 +77,16 @@ const OpenPositionsChart = () => {
                     scales: {
                         x: {
                             reverse: true
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
                         }
                     },
                 }}
@@ -78,25 +95,42 @@ const OpenPositionsChart = () => {
                         datasets: [
                             {
                                 label: 'Fiz Short',
-                                data: getGraphicData('fizDerivatives', 'short_position'),
+                                data: getOpenPositionsData('fizDerivatives', 'short_position'),
                                 borderColor: '#de1212',
+                                yAxisID: 'y',
                             },
                             {
                                 label: 'Fiz Long',
-                                data: getGraphicData('fizDerivatives', 'long_position'),
+                                data: getOpenPositionsData('fizDerivatives', 'long_position'),
                                 borderColor: '#24c0e3',
+                                yAxisID: 'y',
                             },
                             {
                                 label: 'Legal Short',
-                                data: getGraphicData('legalDerivatives', 'short_position'),
+                                data: getOpenPositionsData('legalDerivatives', 'short_position'),
                                 borderColor: '#ff9500',
+                                yAxisID: 'y',
                             },
                             {
                                 label: 'legal Long',
-                                data: getGraphicData('legalDerivatives', 'long_position'),
+                                data: getOpenPositionsData('legalDerivatives', 'long_position'),
                                 borderColor: '#22ff00',
-                                // backgroundColor: '22ff00',
+                                yAxisID: 'y',
                             },
+                            {
+                                label: 'Legal/fiz LONG',
+                                data: getMatchingData('legalToFizLongPositions'),
+                                borderColor: '#031cfc',
+                                borderDash: [5, 5],
+                                yAxisID: 'y1',
+                            },
+                            {
+                                label: 'Legal/fiz SHORT',
+                                data: getMatchingData('legalToFizShortPositions'),
+                                borderColor: '#fc03cf',
+                                borderDash: [5, 5],
+                                yAxisID: 'y1',
+                            }
                         ],
                     }} />
             </div>
