@@ -8,13 +8,13 @@ import {
     Title,
     Tooltip,
     Legend,
-    Utils
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import moment from 'moment'
 import SelectedIsinCard from './SelectedIsinCard';
 import { useSelector } from 'react-redux';
 import { useActions } from '../hooks/useActions';
+import { reduceArraySize } from '../utils/reduceArraySize';
 
 ChartJS.register(
     CategoryScale,
@@ -30,6 +30,7 @@ ChartJS.register(
 const OpenPositionsChart = () => {
     const { currentIsin, queryLimit } = useSelector(state => { return state.main })
     const { setCurrentIsinDerivativeData } = useActions()
+    const MAX_DATA_LEN = 150
 
 
     const [derivativeData, setDerivativeData] = useState()
@@ -50,17 +51,19 @@ const OpenPositionsChart = () => {
     }
 
     const getLabels = () => {
-        return derivativeData.fizDerivatives.map(der => moment(der.date).format('DD-MM-YY'))
+        const result = derivativeData.fizDerivatives.map(der => moment(der.date).format('DD-MM-YY'))
+        return reduceArraySize(result, MAX_DATA_LEN)
     }
     const getOpenPositionsData = (izFiz, positionType) => {
-        return derivativeData[izFiz].map(der => der[positionType]) // number array
+        const result = derivativeData[izFiz].map(der => der[positionType]) // number array
+        return reduceArraySize(result, MAX_DATA_LEN)
     }
 
     // legalLongToFizLong , legalShortToFizShort , legalShortToFizLong , legalLongToFizShort
-    const getMatchingData = (dataType)=>{
-        return derivativeData.matchData?.map(data => data[dataType]) // number array
+    const getMatchingData = (dataType) => {
+        const result = derivativeData.matchData?.map(data => data[dataType]) // number array
+        return reduceArraySize(result, MAX_DATA_LEN)
     }
-
 
     return (
         <div>
