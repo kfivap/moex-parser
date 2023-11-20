@@ -26,14 +26,15 @@ services:
       - mongodb
     restart: always
 
-  mongodb:
-    container_name: mongodb
-    image: mongo:5
-    ports:
-      - 27017:27017
-    volumes:
-      - mongo:/data/db
-    restart: always
+    #  todo postgres
+  # mongodb:
+  #   container_name: mongodb
+  #   image: mongo:5
+  #   ports:
+  #     - 27017:27017
+  #   volumes:
+  #     - mongo:/data/db
+  #   restart: always
 
 volumes:
   mongo:

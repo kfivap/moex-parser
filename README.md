@@ -19,3 +19,7 @@ todo
 
 
 сделать на графике в точках данные - сколько клиентов в позиции
+
+
+npx prisma generate 
+npx prisma db push --force-reset

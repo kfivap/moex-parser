@@ -1,0 +1,50 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model derivative {
+  id                          Int      @id @default(autoincrement())
+  date                        DateTime
+  isin                        String
+  name                        String
+  contract_type               String
+  iz_fiz                      Boolean
+  clients_in_long             Int
+  clients_in_short            Int
+  short_position              Int
+  long_position               Int
+  change_prev_week_short_abs  Float?
+  change_prev_week_long_abs   Float?
+  change_prev_week_short_perc Float?
+  change_prev_week_long_perc  Float?
+
+  fiz_derivative   match_derivative[] @relation("fiz_derivative")
+  legal_derivative match_derivative[] @relation("legal_derivative")
+
+  @@unique([date, isin, iz_fiz, contract_type], name: "derivatives_unique")
+}
+
+model match_derivative {
+  id            Int      @id @default(autoincrement())
+  date          DateTime
+  isin          String
+  contract_type String
+
+  legal_long_to_fiz_long   Float
+  legal_short_to_fiz_short Float
+  legal_short_to_fiz_long  Float
+  legal_long_to_fiz_short  Float
+
+  fiz_derivative    derivative @relation(fields: [fiz_derivative_id], references: [id], name: "fiz_derivative")
+  fiz_derivative_id Int
+
+  legal_derivative    derivative @relation(fields: [legal_derivative_id], references: [id], name: "legal_derivative")
+  legal_derivative_id Int
+
+  @@unique([date, isin, contract_type], name: "unique_index")
+}
