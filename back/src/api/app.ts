@@ -18,31 +18,31 @@ app.get('/derivatives', async (req, res) => {
     const isin = req.query.isin as string
     if (!isin) return res.sendStatus(400)
 
-    const query: PrismaType.derivativeWhereInput | PrismaType.match_derivativeWhereInput = {
+    const query: PrismaType.derivative_open_positionsWhereInput | PrismaType.match_derivative_open_positionsWhereInput = {
         isin, contract_type: contractTypes.futures
     }
     const limit = Number(req.query.limit) || 30
 
     const [fizDerivatives, legalDerivatives, matchData] = await Promise.all([
-        prismaClient.derivative.findMany({
+        prismaClient.derivative_open_positions.findMany({
             where: {
-                ...query as PrismaType.derivativeWhereInput,
+                ...query as PrismaType.derivative_open_positionsWhereInput,
                 iz_fiz: true
             },
             take: limit,
             orderBy: { date: 'desc' }
         }),
-        prismaClient.derivative.findMany({
+        prismaClient.derivative_open_positions.findMany({
             where: {
-                ...query as PrismaType.derivativeWhereInput,
+                ...query as PrismaType.derivative_open_positionsWhereInput,
                 iz_fiz: false
             },
             take: limit,
             orderBy: { date: 'desc' }
         }),
-        prismaClient.match_derivative.findMany({
+        prismaClient.match_derivative_open_positions.findMany({
             where: {
-                ...query as PrismaType.match_derivativeWhereInput,
+                ...query as PrismaType.match_derivative_open_positionsWhereInput,
             },
             take: limit,
             orderBy: { date: 'desc' }
@@ -57,17 +57,18 @@ app.get('/derivatives', async (req, res) => {
 
 
 app.get('/isin', async (req, res) => {
-    const grouped = await prismaClient.derivative.groupBy({
-        by: ['isin', 'name'],
+    const grouped = await prismaClient.derivative_open_positions.groupBy({
+        by: ['derivative_id'],
         where: {
             contract_type: contractTypes.futures,
         },
         _sum: {
             short_position: true, long_position: true
         },
+        
     })
 
-    const result: ApiIsinListResponse = grouped.sort((a, b) => b._sum.long_position - a._sum.long_position)
+    const result: any = grouped.sort((a, b) => b._sum.long_position - a._sum.long_position)
     res.json(result)
     return
 })

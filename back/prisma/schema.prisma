@@ -8,28 +8,34 @@ generator client {
 }
 
 model derivative {
-  id                          Int      @id @default(autoincrement())
-  date                        DateTime
-  isin                        String
-  name                        String
-  contract_type               String
-  iz_fiz                      Boolean
-  clients_in_long             Int
-  clients_in_short            Int
-  short_position              Int
-  long_position               Int
-  change_prev_week_short_abs  Float?
-  change_prev_week_long_abs   Float?
-  change_prev_week_short_perc Float?
-  change_prev_week_long_perc  Float?
+  id   Int    @id @default(autoincrement())
+  name String
+  isin String
 
-  fiz_derivative   match_derivative[] @relation("fiz_derivative")
-  legal_derivative match_derivative[] @relation("legal_derivative")
-
-  @@unique([date, isin, iz_fiz, contract_type], name: "derivatives_unique")
+  derivative_open_positions derivative_open_positions[]
 }
 
-model match_derivative {
+model derivative_open_positions {
+  id   Int      @id @default(autoincrement())
+  date DateTime
+
+  contract_type    String
+  iz_fiz           Boolean
+  clients_in_long  Int
+  clients_in_short Int
+  short_position   Int
+  long_position    Int
+
+  fiz_open_positions   match_derivative_open_positions[] @relation("fiz_open_positions")
+  legal_open_positions match_derivative_open_positions[] @relation("legal_open_positions")
+
+  derivative    derivative @relation(fields: [derivative_id], references: [id])
+  derivative_id Int
+
+  @@unique([date, derivative_id, iz_fiz, contract_type], name: "derivatives_unique")
+}
+
+model match_derivative_open_positions {
   id            Int      @id @default(autoincrement())
   date          DateTime
   isin          String
@@ -40,11 +46,11 @@ model match_derivative {
   legal_short_to_fiz_long  Float
   legal_long_to_fiz_short  Float
 
-  fiz_derivative    derivative @relation(fields: [fiz_derivative_id], references: [id], name: "fiz_derivative")
-  fiz_derivative_id Int
+  fiz_open_positions    derivative_open_positions @relation(fields: [fiz_open_positions_id], references: [id], name: "fiz_open_positions")
+  fiz_open_positions_id Int
 
-  legal_derivative    derivative @relation(fields: [legal_derivative_id], references: [id], name: "legal_derivative")
-  legal_derivative_id Int
+  legal_open_positions    derivative_open_positions @relation(fields: [legal_open_positions_id], references: [id], name: "legal_open_positions")
+  legal_open_positions_id Int
 
   @@unique([date, isin, contract_type], name: "unique_index")
 }

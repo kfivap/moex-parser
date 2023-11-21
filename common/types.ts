@@ -1,4 +1,4 @@
-import type { match_derivative, derivative } from '../back/node_modules/@prisma/client'
+import type { match_derivative_open_positions, derivative_open_positions } from '../back/node_modules/@prisma/client'
 
 export type ApiIsin = {
     isin: string,
@@ -10,8 +10,8 @@ export type ApiIsin = {
 }
 export type ApiIsinListResponse = ApiIsin[]
 
-export type ApiDerivative = derivative
-export type ApiMatchDerivative = match_derivative
+export type ApiDerivative = derivative_open_positions
+export type ApiMatchDerivative = match_derivative_open_positions
 export type ApiDerivativesResponse = {
     fizDerivatives: ApiDerivative[],
     legalDerivatives: ApiDerivative[],
