@@ -3,7 +3,7 @@ import cors from 'cors'
 import { contractTypes } from '../constants'
 import { prismaClient } from '../db/prisma-client'
 import type { Prisma as PrismaType } from '@prisma/client'
-import type { ApiIsinListResponse, ApiDerivativesResponse } from '../../../common/types'
+import type { ApiIsinListResponse, ApiDerivativesResponse, ApiIsin } from '../../../common/types'
 const app = express()
 
 app.use(cors())
@@ -18,31 +18,44 @@ app.get('/derivatives', async (req, res) => {
     const isin = req.query.isin as string
     if (!isin) return res.sendStatus(400)
 
-    const query: PrismaType.derivative_open_positionsWhereInput | PrismaType.match_derivative_open_positionsWhereInput = {
-        isin, contract_type: contractTypes.futures
-    }
+ 
     const limit = Number(req.query.limit) || 30
 
     const [fizDerivatives, legalDerivatives, matchData] = await Promise.all([
         prismaClient.derivative_open_positions.findMany({
             where: {
-                ...query as PrismaType.derivative_open_positionsWhereInput,
+                derivative: {
+                    isin,
+                },
+                contract_type: contractTypes.futures,
                 iz_fiz: true
+            },
+            include: {
+                derivative: true
             },
             take: limit,
             orderBy: { date: 'desc' }
         }),
         prismaClient.derivative_open_positions.findMany({
             where: {
-                ...query as PrismaType.derivative_open_positionsWhereInput,
+                derivative: {
+                    isin,
+                },
+                contract_type: contractTypes.futures,
                 iz_fiz: false
+            },
+            include: {
+                derivative: true
             },
             take: limit,
             orderBy: { date: 'desc' }
         }),
         prismaClient.match_derivative_open_positions.findMany({
             where: {
-                ...query as PrismaType.match_derivative_open_positionsWhereInput,
+                derivative: {
+                    isin,
+                },
+                contract_type: contractTypes.futures,
             },
             take: limit,
             orderBy: { date: 'desc' }
@@ -57,18 +70,16 @@ app.get('/derivatives', async (req, res) => {
 
 
 app.get('/isin', async (req, res) => {
-    const grouped = await prismaClient.derivative_open_positions.groupBy({
-        by: ['derivative_id'],
-        where: {
-            contract_type: contractTypes.futures,
+    const result: ApiIsinListResponse = await prismaClient.derivative_open_positions.findMany({
+        orderBy: {
+            long_position: 'desc'
         },
-        _sum: {
-            short_position: true, long_position: true
+        include: {
+            derivative: true
         },
-        
+        distinct: ['derivative_id']
     })
 
-    const result: any = grouped.sort((a, b) => b._sum.long_position - a._sum.long_position)
     res.json(result)
     return
 })

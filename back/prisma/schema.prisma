@@ -12,7 +12,8 @@ model derivative {
   name String
   isin String
 
-  derivative_open_positions derivative_open_positions[]
+  derivative_open_positions       derivative_open_positions[]
+  match_derivative_open_positions match_derivative_open_positions[]
 }
 
 model derivative_open_positions {
@@ -38,7 +39,6 @@ model derivative_open_positions {
 model match_derivative_open_positions {
   id            Int      @id @default(autoincrement())
   date          DateTime
-  isin          String
   contract_type String
 
   legal_long_to_fiz_long   Float
@@ -52,5 +52,8 @@ model match_derivative_open_positions {
   legal_open_positions    derivative_open_positions @relation(fields: [legal_open_positions_id], references: [id], name: "legal_open_positions")
   legal_open_positions_id Int
 
-  @@unique([date, isin, contract_type], name: "unique_index")
+  derivative    derivative @relation(fields: [derivative_id], references: [id])
+  derivative_id Int
+
+  @@unique([date, derivative_id, contract_type], name: "unique_index")
 }

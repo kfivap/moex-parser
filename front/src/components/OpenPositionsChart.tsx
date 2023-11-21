@@ -40,13 +40,14 @@ const OpenPositionsChart = () => {
         async function fetchData() {
             if (!currentIsin) return
 
-            const response = await fetch(`http://localhost:5000/derivatives?isin=${currentIsin?.isin}&limit=${queryLimit}`)
+            const response = await fetch(`http://localhost:5000/derivatives?isin=${currentIsin?.derivative.isin}&limit=${queryLimit}`)
             const respJson = await response.json() as ApiDerivativesResponse
             console.log(respJson)
             setDerivativeData(respJson)
             setCurrentIsinDerivativeData({
-                fiz: respJson.fizDerivatives[respJson.fizDerivatives.length - 1], legal: respJson.legalDerivatives[respJson.legalDerivatives.length - 1],
-                match: respJson.matchData[respJson.matchData.length - 1]
+                fiz: respJson.fizDerivatives[1], 
+                legal: respJson.legalDerivatives[1],
+                match: respJson.matchData[1]
             })
         }
         fetchData();

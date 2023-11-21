@@ -9,11 +9,11 @@ const SelectedIsinCard = () => {
     if (!currentIsin) return null
     return (
         <div className='selected-isin-card'>
-            <h3>{currentIsin?.isin}</h3>
-            <h5>{currentIsin?.name}</h5>
-            name: {currentIsinDerivativeData?.fiz?.name} <br />
+            <h3>{currentIsin?.derivative.isin}</h3>
+            <h5>{currentIsin?.derivative.name}</h5>
+            name: {currentIsinDerivativeData?.fiz?.derivative.name} <br />
             date: {currentIsinDerivativeData?.fiz?.date} <br />
-            total positions: {currentIsin?._sum?.short_position + currentIsin?._sum?.long_position}
+            total positions: {currentIsin?.long_position + currentIsin?.short_position}
             <br />
             <div className='isin-info-container'>
 

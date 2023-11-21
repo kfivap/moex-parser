@@ -25,7 +25,7 @@ const IsinList = () => {
         <div>
             {isinList.map(isin => {
                 return (
-                    <IsinItem key={isin.isin} isin={isin} />
+                    <IsinItem key={isin.derivative.isin} isin={isin} />
                 )
             })}
         </div>

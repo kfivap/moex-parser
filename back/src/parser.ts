@@ -33,12 +33,12 @@ process.on('uncaughtException', (e) => {
     console.log(e.message, e.name, e.stack)
 })
 
-function matchDerivativesByDate(date: Date, isin: string, fiz: derivative_open_positions, legal: derivative_open_positions): PrismaType.match_derivative_open_positionsCreateManyInput {
+function matchDerivativesByDate(date: Date, derivativeId: number, fiz: derivative_open_positions, legal: derivative_open_positions): PrismaType.match_derivative_open_positionsCreateManyInput {
     const contractType = contractTypes.futures
 
     const data: PrismaType.match_derivative_open_positionsCreateManyInput = {
         date: date,
-        isin: isin,
+        derivative_id: derivativeId,
         contract_type: contractType,
         fiz_open_positions_id: fiz.id,
         legal_open_positions_id: fiz.id,
@@ -130,10 +130,10 @@ export async function createDbData(): Promise<void> {
             console.log('fetchData: upsert derivatives done')
 
             const matchDerivativesCreateMany: PrismaType.match_derivative_open_positionsCreateManyInput[] = []
-            for (const derivativeId in couples) {
+            for (const derivativeId of Object.keys(couples)) {
                 const result = matchDerivativesByDate(
                     day.date.toDate(),
-                    derivativeId,
+                    Number(derivativeId),
                     couples[derivativeId]?.[contractTypes.futures].fiz,
                     couples[derivativeId]?.[contractTypes.futures].legal
                 )
