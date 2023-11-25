@@ -1,4 +1,3 @@
-// https://www.moex.com/ru/forts/contractbaseresults-exp.aspx?day1=20221014&day2=20231121&base=BR
 // https://www.moex.com/ru/derivatives/open-positions-csv.aspx?d=20220125&t=1
 import https from 'https'
 import csv from 'csv-parser'
@@ -10,7 +9,9 @@ import { createWriteStream, createReadStream, ReadStream } from 'fs'
 import { prismaClient } from './db/prisma-client';
 import { derivative, derivative_open_positions } from '@prisma/client'
 import type { Prisma as PrismaType } from '@prisma/client'
-import { CSV_DOCUMENT_DATE_FORMAT, parseFloatOrReturnZero, safeParsePercent } from './utils/utils';
+import { CSV_DOCUMENT_DATE_FORMAT, parseFloatOrReturnZero, safeParsePercent, userAgentHeaders } from './utils/utils';
+import xml2js from 'xml2js'
+import axios from 'axios';
 
 type DateWithFormatted = {
     formatted: string,
@@ -52,6 +53,23 @@ function matchDerivativesByDate(date: Date, derivativeId: number, fiz: derivativ
 }
 
 
+const derivativesInfoByIsin: Record<string, string> = {}
+// https://iss.moex.com/iss/engines/futures/markets/forts/securities.xml
+async function loadDerivativeInfo() {
+    console.log('loadDerivativeInfo...')
+    const xml = (await axios.get('https://iss.moex.com/iss/engines/futures/markets/forts/securities.xml', { headers: userAgentHeaders })).data
+    const parsed = await xml2js.parseStringPromise(xml)
+    for (const _row of parsed.document.data[0].rows[0].row) {
+        const row = _row['$']
+        const isin = row.ASSETCODE
+        const shortCode = row.SECTYPE
+        derivativesInfoByIsin[isin] = shortCode
+    }
+}
+
+
+
+
 export async function createDbData(): Promise<void> {
     // debug
     // await prismaClient.match_derivative_open_positions.deleteMany({ where: {} })
@@ -72,6 +90,8 @@ export async function createDbData(): Promise<void> {
             }
         } = {}
 
+        let derivativesInfoByIsinLoaded = false
+
         for (const day of daysArr) {
             const rawData = await getDataByDay(day.formatted)
 
@@ -87,10 +107,17 @@ export async function createDbData(): Promise<void> {
                     if (derivativeExist) {
                         isinToDerivativeId[row.isin] = derivativeExist.id
                     } else {
+
+                        if (!derivativesInfoByIsinLoaded) {
+                            await loadDerivativeInfo()
+                            derivativesInfoByIsinLoaded = true
+                        }
+
                         const derivative = await prismaClient.derivative.create({
                             data: {
                                 name: row.name,
-                                isin: row.isin
+                                isin: row.isin,
+                                short_code: derivativesInfoByIsin[row.isin]
                             }
                         })
                         isinToDerivativeId[row.isin] = derivative.id
@@ -172,7 +199,7 @@ async function dataArrayGenerator(range): Promise<DateWithFormatted[]> {
 }
 
 async function getLocalOrFetchFile(day: string): Promise<ReadStream> {
-    const filePath = path.join(__dirname, '../derivatives_files', `${day}.csv`)
+    const filePath = path.join(__dirname, '../files/open_positions', `${day}.csv`)
     const fileExists = await access(filePath).then(() => true).catch(() => false)
     console.log('fileExists', day, fileExists)
     if (fileExists) {

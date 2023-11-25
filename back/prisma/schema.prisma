@@ -7,13 +7,39 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model derivative_prices {
+  id                             Int        @id @default(autoincrement())
+  date                           DateTime
+  derivative                     derivative @relation(fields: [derivative_id], references: [id])
+  derivative_id                  Int
+  futures_code                   String // 'кодфьючерса': 'BRZ3',
+  weighted_average_price_per_lot Float // 'средне-взвешеннаяцена за лот': '81.75',
+  calculated_price               Float // 'расчетнаяцена': '82.28',
+  first_deal_price               Float // 'ценапервойсделки': '81.15',
+  max_price                      Float // 'максим.цена': '82.39',
+  min_price                      Float // 'миним.цена': '81.01',
+  last_deal_price                Float // 'ценапоследнейсделки': '82.28',
+  change                         Float // 'изменение': '1.37',
+  last_deal_volume_contracts     Float // 'объемпоследнейсделки,контр.': '36',
+  number_of_deals                Float // 'числосделок': '61620',
+  trading_volume_rub             Float // 'объемторгов,руб.': '17635578331',
+  trading_volume_contracts       Float // 'объемторгов,контр.': '243244',
+  open_position_volume_rub       Float // 'объемоткрытыхпозиций,руб.': '43580784624',
+  open_position_volume_contracts Float // 'объемоткрытыхпозиций,контр.': '597210',
+  margin_per_contract_rub        Float // 'размерыго(руб./контракт)': '15255',
+
+  @@unique([date, derivative_id], name: "derivatives_date_unique")
+}
+
 model derivative {
-  id   Int    @id @default(autoincrement())
-  name String
-  isin String
+  id         Int    @id @default(autoincrement())
+  name       String
+  isin       String
+  short_code String
 
   derivative_open_positions       derivative_open_positions[]
   match_derivative_open_positions match_derivative_open_positions[]
+  derivative_prices               derivative_prices[]
 }
 
 model derivative_open_positions {
