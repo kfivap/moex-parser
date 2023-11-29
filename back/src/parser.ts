@@ -70,7 +70,7 @@ async function loadDerivativeInfo() {
 
 
 
-export async function createDbData(): Promise<void> {
+export async function createDerivativeData(): Promise<void> {
     // debug
     // await prismaClient.match_derivative_open_positions.deleteMany({ where: {} })
     // await prismaClient.derivative_open_positions.deleteMany({ where: {} })

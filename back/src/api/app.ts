@@ -18,10 +18,9 @@ app.get('/derivatives', async (req, res) => {
     const isin = req.query.isin as string
     if (!isin) return res.sendStatus(400)
 
- 
     const limit = Number(req.query.limit) || 30
 
-    const [fizDerivatives, legalDerivatives, matchData] = await Promise.all([
+    const [fizDerivatives, legalDerivatives, matchData, priceData] = await Promise.all([
         prismaClient.derivative_open_positions.findMany({
             where: {
                 derivative: {
@@ -59,10 +58,55 @@ app.get('/derivatives', async (req, res) => {
             },
             take: limit,
             orderBy: { date: 'desc' }
+        }),
+        prismaClient.derivative_prices.findMany({
+            where: {
+                derivative: {
+                    isin
+                },
+            }
         })
     ])
 
-    const result: ApiDerivativesResponse = { fizDerivatives, legalDerivatives, matchData }
+    const result: ApiDerivativesResponse = {}
+
+    for (const row of fizDerivatives) {
+        const key = row.date.toISOString()
+        if (!result[key]) result[key] = {} as any
+        result[row.date.toISOString()].fiz = row
+    }
+
+    for (const row of legalDerivatives) {
+        const key = row.date.toISOString()
+        if (!result[key]) result[key] = {} as any
+        result[row.date.toISOString()].legal = row
+    }
+
+    for (const row of matchData) {
+        const key = row.date.toISOString()
+        if (!result[key]) result[key] = {} as any
+        result[row.date.toISOString()].match = row
+    }
+
+    for (const row of priceData) {
+        const key = row.date.toISOString()
+        if (!result[key]) result[key] = {} as any
+        result[row.date.toISOString()].price = row
+    }
+
+    // переделать на
+    /*
+
+    [date: Date] :{
+        fiz
+        legal
+        match
+        trades
+    }
+
+    */
+
+    // const result: ApiDerivativesResponse = { fizDerivatives, legalDerivatives, matchData }
 
     res.json(result)
     return

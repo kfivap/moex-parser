@@ -16,7 +16,7 @@ import { useSelector } from 'react-redux';
 import { useActions } from '../hooks/useActions';
 import { reduceArraySize } from '../utils/reduceArraySize';
 import type { RootState } from '../store/reducers'
-import type { ApiDerivative, ApiDerivativesResponse, ApiMatchDerivative } from '../../../common/types'
+import type { ApiDerivative, ApiDerivativesDayData, ApiDerivativesResponse, ApiMatchDerivative } from '../../../common/types'
 
 ChartJS.register(
     CategoryScale,
@@ -44,10 +44,11 @@ const OpenPositionsChart = () => {
             const respJson = await response.json() as ApiDerivativesResponse
             console.log(respJson)
             setDerivativeData(respJson)
+            const latestDate = Object.keys(respJson)[0]
             setCurrentIsinDerivativeData({
-                fiz: respJson.fizDerivatives[1], 
-                legal: respJson.legalDerivatives[1],
-                match: respJson.matchData[1]
+                fiz: respJson[latestDate].fiz,
+                legal: respJson[latestDate].legal,
+                match: respJson[latestDate].match
             })
         }
         fetchData();
@@ -57,17 +58,46 @@ const OpenPositionsChart = () => {
     }
 
     const getLabels = () => {
-        const result = derivativeData.fizDerivatives.map(der => moment(der.date).format('DD-MM-YY'))
+        const result: string[] = []
+        for (const day of Object.keys(derivativeData)) {
+            if (!derivativeData[day]?.fiz?.date) {
+                continue
+            }
+            result.push(moment(derivativeData[day].fiz.date).format('DD-MM-YY'))
+        }
         return reduceArraySize(result, MAX_DATA_LEN)
     }
-    const getOpenPositionsData = (izFiz: keyof ApiDerivativesResponse, positionType: keyof ApiDerivative) => {
-        const result = derivativeData[izFiz].map(der => der[positionType]) // number array
+    const getOpenPositionsData = (izFiz: keyof ApiDerivativesDayData, positionType: keyof ApiDerivative) => {
+        const result: number[] = []
+        for (const day of Object.keys(derivativeData)) {
+            if (!derivativeData[day]?.[izFiz]?.[positionType]) {
+                continue
+            }
+            result.push(derivativeData[day][izFiz][positionType] as number)
+        }
         return reduceArraySize(result, MAX_DATA_LEN)
     }
 
     // legalLongToFizLong , legalShortToFizShort , legalShortToFizLong , legalLongToFizShort
     const getMatchingData = (dataType: keyof ApiMatchDerivative) => {
-        const result = derivativeData.matchData?.map(data => data[dataType]) // number array
+        const result: number[] = []
+        for (const day of Object.keys(derivativeData)) {
+            if (!derivativeData[day]?.match?.[dataType]) {
+                continue
+            }
+            result.push(derivativeData[day].match[dataType] as number)
+        }
+        return reduceArraySize(result, MAX_DATA_LEN)
+    }
+
+    const getPriceData = () => {
+        const result: number[] = []
+        for (const day of Object.keys(derivativeData)) {
+            if (!derivativeData[day]?.price?.last_deal_price) {
+                continue
+            }
+            result.push(derivativeData[day].price.last_deal_price as number)
+        }
         return reduceArraySize(result, MAX_DATA_LEN)
     }
 
@@ -104,25 +134,25 @@ const OpenPositionsChart = () => {
                         datasets: [
                             {
                                 label: 'Fiz Short',
-                                data: getOpenPositionsData('fizDerivatives', 'short_position'),
+                                data: getOpenPositionsData('fiz', 'short_position'),
                                 borderColor: '#de1212',
                                 yAxisID: 'y',
                             },
                             {
                                 label: 'Fiz Long',
-                                data: getOpenPositionsData('fizDerivatives', 'long_position'),
+                                data: getOpenPositionsData('fiz', 'long_position'),
                                 borderColor: '#24c0e3',
                                 yAxisID: 'y',
                             },
                             {
                                 label: 'Legal Short',
-                                data: getOpenPositionsData('legalDerivatives', 'short_position'),
+                                data: getOpenPositionsData('legal', 'short_position'),
                                 borderColor: '#ff9500',
                                 yAxisID: 'y',
                             },
                             {
                                 label: 'legal Long',
-                                data: getOpenPositionsData('legalDerivatives', 'long_position'),
+                                data: getOpenPositionsData('legal', 'long_position'),
                                 borderColor: '#22ff00',
                                 yAxisID: 'y',
                             },
@@ -155,6 +185,13 @@ const OpenPositionsChart = () => {
                                 borderColor: '#20fc03',
                                 borderDash: [5, 5],
                                 yAxisID: 'y1',
+                            },
+                            {
+                                label: 'Derivative price',
+                                data: getPriceData(),
+                                borderColor: '#0000ff',
+                                // borderDash: [5, 5],
+                                yAxisID: 'y2',
                             }
                         ],
                     }} />

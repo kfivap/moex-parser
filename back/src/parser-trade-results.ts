@@ -170,7 +170,7 @@ async function daysRangeArrayGenerator(range): Promise<DaysRangeResult[]> {
 }
 
 
-export async function createDbData(): Promise<void> {
+export async function createTradeData(): Promise<void> {
     try {
         const daysRangeArr = await daysRangeArrayGenerator(3)
         const derivatives = await prismaClient.derivative.findMany({})
@@ -219,4 +219,3 @@ export async function createDbData(): Promise<void> {
 
 }
 
-createDbData().catch(console.error)
